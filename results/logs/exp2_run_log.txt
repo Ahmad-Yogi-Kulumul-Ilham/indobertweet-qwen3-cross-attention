@@ -1,0 +1,129 @@
+[0.0 mnt] $ nvidia-smi
+Fri Oct  2 09:43:37 2026
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  Tesla T4                       Off |   00000000:00:04.0 Off |                    0 |
+| N/A   45C    P8              9W /   70W |       0MiB /  15360MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  Tesla T4                       Off |   00000000:00:05.0 Off |                    0 |
+| N/A   44C    P8              9W /   70W |       0MiB /  15360MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+[0.0 mnt] $ /usr/bin/python3 -m pip install -q -U 'transformers>=4.51' peft bitsandbytes accelerate openpyxl
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.6/12.6 MB 104.1 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 835.4/835.4 kB 30.6 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 MB 50.5 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 394.3/394.3 kB 13.9 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 516.0/516.0 kB 22.7 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.4/3.4 MB 68.9 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 846.4/846.4 kB 33.8 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 125.3/125.3 kB 5.3 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 91.5 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 69.6/69.6 kB 3.2 MB/s eta 0:00:00
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+google-adk 1.29.0 requires google-cloud-bigquery-storage>=2.0.0, which is not installed.
+[0.6 mnt] $ /usr/bin/python3 src/build_datasets.py
+== depresi: 10082 baris -> data/raw_std/depresi.csv
+label
+tidak_depresi    5617
+depresi          4465
+== suicide: 10127 baris -> data/raw_std/suicide.csv
+label
+tidak             8160
+ide_bunuh_diri    1967
+== depresi_anxiety: 2751 baris -> data/raw_std/depresi_anxiety.csv
+label
+normal             1857
+depresi_anxiety     894
+== distortion: 4662 baris -> data/raw_std/distortion.csv
+label
+distorsi    2416
+tidak       2246
+== distortion_type: 2416 baris -> data/raw_std/distortion_type.csv
+label
+Labeling                         390
+Mind Reading                     385
+Should statement                 371
+Personalization and Blame        284
+Discounting the positives        241
+Overgeneralization               215
+Mental filter                    189
+All-or-nothing                   158
+Magnification or Minimization     85
+Fortune-telling                   60
+Emotional Reasoning               38
+== multiclass: 9151 baris -> data/raw_std/multiclass.csv
+label
+suicidal                1657
+depression              1635
+normal                  1236
+personality disorder    1234
+stress                  1233
+anxiety                 1190
+bipolar                  966
+[0.7 mnt] $ /usr/bin/python3 src/prepare_data.py --input data/raw_std/depresi.csv --out_dir data/depresi
+10082 -> 3852 baris setelah cleaning, dedup (12 teks label-konflik dibuang)
+label
+tidak_depresi    2123
+depresi          1729
+Panjang kata: median 28, p90 43
+[0.7 mnt] $ /usr/bin/python3 src/prepare_data.py --input data/raw_std/distortion.csv --out_dir data/distortion
+4662 -> 4634 baris setelah cleaning, dedup (0 teks label-konflik dibuang)
+label
+distorsi    2412
+tidak       2222
+Panjang kata: median 24, p90 52
+10 job, 2 GPU paralel
+[0.8 mnt] $ /usr/bin/python3 src/train.py --task depresi --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 0 --no_grad_ckpt
+[1.3 mnt] $ /usr/bin/python3 src/train.py --task depresi --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 1 --no_grad_ckpt
+[fold 0] TEST acc=0.7665 macro_f1=0.7663
+[17.0 mnt] $ /usr/bin/python3 src/train.py --task depresi --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 2 --no_grad_ckpt
+[fold 1] TEST acc=0.7367 macro_f1=0.7367
+[17.2 mnt] $ /usr/bin/python3 src/train.py --task depresi --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 3 --no_grad_ckpt
+[fold 2] TEST acc=0.7740 macro_f1=0.7724
+[31.9 mnt] $ /usr/bin/python3 src/train.py --task depresi --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 4 --no_grad_ckpt
+[fold 3] TEST acc=0.7532 macro_f1=0.7513
+[32.6 mnt] $ /usr/bin/python3 src/train.py --task distortion --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 0 --no_grad_ckpt
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 48.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 38.81 MiB is free. Including non-PyTorch memory, this process has 14.52 GiB memory in use. Of the allocated memory 13.72 GiB is allocated by PyTorch, and 682.57 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[GPU 1] distortion/fusion_cross_v2 fold 0 gagal (exit 1), ulang dengan gradient checkpointing
+[33.1 mnt] $ /usr/bin/python3 src/train.py --task distortion --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 0
+[fold 4] TEST acc=0.7481 macro_f1=0.7467
+[43.4 mnt] $ /usr/bin/python3 src/train.py --task distortion --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 1 --no_grad_ckpt
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 48.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 12.81 MiB is free. Including non-PyTorch memory, this process has 14.55 GiB memory in use. Of the allocated memory 14.07 GiB is allocated by PyTorch, and 345.91 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[GPU 0] distortion/fusion_cross_v2 fold 1 gagal (exit 1), ulang dengan gradient checkpointing
+[43.8 mnt] $ /usr/bin/python3 src/train.py --task distortion --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 1
+[fold 0] TEST acc=0.8026 macro_f1=0.8012
+[63.6 mnt] $ /usr/bin/python3 src/train.py --task distortion --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 2 --no_grad_ckpt
+[fold 1] TEST acc=0.7713 macro_f1=0.7673
+[73.4 mnt] $ /usr/bin/python3 src/train.py --task distortion --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 3 --no_grad_ckpt
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 48.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 28.81 MiB is free. Including non-PyTorch memory, this process has 14.53 GiB memory in use. Of the allocated memory 14.04 GiB is allocated by PyTorch, and 361.70 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[GPU 0] distortion/fusion_cross_v2 fold 3 gagal (exit 1), ulang dengan gradient checkpointing
+[73.8 mnt] $ /usr/bin/python3 src/train.py --task distortion --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 3
+[fold 2] TEST acc=0.7670 macro_f1=0.7667
+[85.9 mnt] $ /usr/bin/python3 src/train.py --task distortion --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 4 --no_grad_ckpt
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 48.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 32.81 MiB is free. Including non-PyTorch memory, this process has 14.53 GiB memory in use. Of the allocated memory 14.11 GiB is allocated by PyTorch, and 284.83 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[GPU 1] distortion/fusion_cross_v2 fold 4 gagal (exit 1), ulang dengan gradient checkpointing
+[102.9 mnt] $ /usr/bin/python3 src/train.py --task distortion --run_name fusion_cross_v2 --model fusion --fusion cross_attention --folds 4
+[fold 3] TEST acc=0.7691 macro_f1=0.7690
+[fold 4] TEST acc=0.7927 macro_f1=0.7913
+[133.2 mnt] $ for t in $(ls results); do /usr/bin/python3 src/aggregate.py --task $t; done
+| run | folds | accuracy | macro_f1 | weighted_f1 | macro_precision | macro_recall | gate(enc,llm) |
+|---|---|---|---|---|---|---|---|
+| fusion_cross_v2 | 5 | 75.57 ± 1.48 | 75.47 ± 1.45 | 75.61 ± 1.48 | 75.60 ± 1.35 | 75.77 ± 1.37 | - |
+| run | folds | accuracy | macro_f1 | weighted_f1 | macro_precision | macro_recall | gate(enc,llm) |
+|---|---|---|---|---|---|---|---|
+| fusion_cross_v2 | 5 | 78.05 ± 1.61 | 77.91 ± 1.60 | 77.97 ± 1.61 | 78.30 ± 1.65 | 77.89 ± 1.56 | - |
