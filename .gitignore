@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Datasets: third-party data (some without a redistribution license) - obtain from the original sources
+data/
+
+# Manuscript under review - not public until publication
+paper/*
+!paper/figures/
+!paper/figures_en/
+
+# Local working notes (Indonesian)
+CATATAN_PROYEK.md
+
+# Credentials / local tooling
+kaggle.json
+.kaggle/
+*.token

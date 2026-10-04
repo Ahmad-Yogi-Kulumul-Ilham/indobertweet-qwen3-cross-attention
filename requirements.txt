@@ -1,0 +1,12 @@
+# torch sudah terpasang di Kaggle, jangan di-install ulang
+transformers>=4.51
+peft>=0.13
+bitsandbytes>=0.43
+accelerate>=0.34
+sentencepiece
+openpyxl
+scikit-learn
+scipy
+pandas
+numpy
+tqdm
