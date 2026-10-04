@@ -99,3 +99,8 @@ results/<task>/<run>/foldK.json   metrics and test predictions (sample IDs only,
 - Labels are text-based indications, not clinical diagnoses. The model is not a diagnostic tool.
 - Each configuration was run with one seed. Quantized GPU training is not fully deterministic, so Qwen3 scores
   vary slightly between runs (`qwen3_lora_sesi1` vs `qwen3_lora`).
+
+## License
+
+The code in this repository is released under the [MIT License](LICENSE). The license does not cover the
+datasets, which remain under the terms set by their original authors (see [Datasets](#datasets)).
